@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>بوابة التصدير</title>
+  
+  <!-- إعدادات PWA المتقدمة لملء الشاشة والتثبيت على الموبايل -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1726">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="بوابة التصدير">
+  <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Batman_Logo_V2.svg/512px-Batman_Logo_V2.svg.png">
+  <link id="manifest" rel="manifest">
+
+  <!-- استدعاء المكتبات والخطوط السريعة -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+  
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      overflow-x: hidden;
+      background-color: #080c14;
+      font-family: 'Tajawal', sans-serif;
+    }
+    
+    body { 
+      background-image: 
+        linear-gradient(rgba(17, 26, 46, 0.4) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(17, 26, 46, 0.4) 1px, transparent 1px);
+      background-size: 20px 20px;
+      color: #fff; 
+      padding: 15px; 
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      box-sizing: border-box;
+    }
+    
+    .container { 
+      width: 100%;
+      max-width: 480px; 
+      background: #0d1726; 
+      padding: 20px; 
+      border-radius: 8px; 
+      border: 1px solid #1c2b3d; 
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      box-sizing: border-box;
+      margin-bottom: 20px;
+    }
+    
+    /* تصميم التبويبات الفخم للتبديل بين الصفحتين */
+    .tabs-container {
+      display: flex;
+      background: #0b1220;
+      border: 1px solid #1c2b3d;
+      border-radius: 6px;
+      padding: 4px;
+      margin-bottom: 20px;
+    }
+    .tab-button {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: bold;
+      color: #a0b2c6;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .tab-button.active {
+      background: #3ca9ff;
+      color: #080c14;
+      box-shadow: 0 0 10px rgba(60, 169, 255, 0.3);
+    }
+    
+    h2 { text-align: center; color: #3ca9ff; margin-top: 0; font-size: 20px; font-weight: 700; }
+    
+    .divider { position: relative; height: 1px; background-color: #1c2b3d; margin: 20px 0; }
+    .divider .dot { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; background-color: #3ca9ff; border-radius: 50%; box-shadow: 0 0 10px #3ca9ff; }
+    
+    label { display: flex; align-items: center; gap: 8px; margin-top: 15px; font-size: 13px; color: #a0b2c6; font-weight: bold; }
+    
+    input[type="date"] { 
+      width: 100%; 
+      height: 46px; 
+      padding: 0 15px; 
+      margin-top: 6px; 
+      border-radius: 4px; 
+      border: 1px solid #20334c; 
+      background: #0b1220; 
+      color: #e2e8f0; 
+      font-family: 'Tajawal'; 
+      box-sizing: border-box; 
+      outline: none; 
+      font-size: 14px; 
+      transition: all 0.3s ease;
+      -webkit-appearance: none; 
+    }
+    input[type="date"]:focus { border-color: #3ca9ff; box-shadow: 0 0 8px rgba(60, 169, 255, 0.3); }
+
+    /* أزرار الاختيار السريع للتاريخ */
+    .quick-dates-container {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .quick-date-btn {
+      flex: 1;
+      padding: 10px 0;
+      background: #0b1220;
+      border: 1px solid #1c2b3d;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: bold;
+      color: #a0b2c6;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .quick-date-btn:hover {
+      border-color: #3ca9ff;
+      color: #fff;
+    }
+    
+    /* تصميم القوائم المنسدلة المخصصة للموقع بالكامل (Custom Dropdowns) */
+    .custom-dropdown {
+      position: relative;
+      width: 100%;
+      margin-top: 6px;
+      user-select: none;
+    }
+    .dropdown-trigger {
+      width: 100%;
+      height: 46px;
+      padding: 0 15px;
+      border-radius: 4px;
+      border: 1px solid #20334c;
+      background: #0b1220;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      font-size: 14px;
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+    }
+    .dropdown-trigger:hover { border-color: #3ca9ff; }
+    .dropdown-arrow { font-size: 10px; color: #a0b2c6; transition: transform 0.3s ease; }
+    .custom-dropdown.open .dropdown-arrow { transform: rotate(180deg); }
+    .custom-dropdown.open .dropdown-trigger { border-color: #3ca9ff; box-shadow: 0 0 8px rgba(60, 169, 255, 0.3); }
+    
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      background: #0d1726;
+      border: 1px solid #20334c;
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+      z-index: 1000;
+      box-sizing: border-box;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+    .custom-dropdown.open .dropdown-menu { display: block; }
+    
+    .dropdown-item {
+      padding: 12px 15px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      color: #a0b2c6;
+      font-size: 13px;
+      transition: all 0.2s ease;
+      border-bottom: 1px solid #142235;
+    }
+    .dropdown-item:last-child { border-bottom: none; }
+    .dropdown-item:hover { background: #162235; color: #fff; }
+    
+    .checkbox-box {
+      width: 18px;
+      height: 18px;
+      border: 1px solid #20334c;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: transparent;
+      font-size: 12px;
+      font-weight: bold;
+      transition: all 0.2s ease;
+      background: #0b1220;
+    }
+    .dropdown-item.active { color: #fff; background: #162235; }
+    .dropdown-item.active .checkbox-box {
+      border-color: #3ca9ff;
+      background-color: #3ca9ff;
+      color: #080c14;
+    }
+    
+    /* خيار الحفظ التلقائي للحالة */
+    .checkbox-container { display: flex; align-items: center; justify-content: space-between; margin-top: 20px; background: #0b1220; padding: 12px 15px; border-radius: 4px; border: 1px solid #20334c; box-sizing: border-box; }
+    .checkbox-container label { margin: 0; color: #a0b2c6; font-size: 12px; }
+    .checkbox-container input { margin: 0; width: 22px; height: 22px; accent-color: #3ca9ff; cursor: pointer; }
+    
+    /* أزرار عملاقة مريحة */
+    button, .download-btn { 
+      width: 100%; 
+      height: 52px; 
+      margin-top: 25px; 
+      background: #1da1f2; 
+      color: #fff; 
+      border: none; 
+      border-radius: 4px; 
+      font-size: 15px; 
+      font-weight: bold; 
+      cursor: pointer; 
+      transition: all 0.3s ease; 
+      font-family: 'Tajawal'; 
+      box-shadow: 0 4px 15px rgba(29, 161, 242, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-sizing: border-box;
+    }
+    button:hover { background: #1990d8; box-shadow: 0 0 15px rgba(29, 161, 242, 0.5); }
+    button:disabled { background: #1c2b3d; color: #777; cursor: not-allowed; box-shadow: none; transform: none; }
+    
+    #statusMsg { margin-top: 15px; font-size: 13px; line-height: 1.5; }
+    .success-box { background: #162235; border: 1px solid #20334c; padding: 12px; border-radius: 4px; text-align: center; color: #e2e8f0; }
+    .error-list { background: rgba(255, 0, 0, 0.05); padding: 12px; border-radius: 4px; border: 1px solid #ff4d4d; color: #ff4d4d; }
+    .error-list ul { margin: 5px 0 0 0; padding-right: 15px; }
+    
+    .download-btn { 
+      background: #155d27; 
+      color: white; 
+      text-decoration: none; 
+      box-shadow: 0 4px 12px rgba(21, 93, 39, 0.4); 
+      margin-top: 15px; 
+    }
+    .download-btn:hover { background: #196f3d; box-shadow: 0 0 15px rgba(25, 111, 61, 0.6); }
+
+    /* 📊 تصميم لوحة الإحصائيات المتقدمة للأجهزة المحمولة 📊 */
+    .stats-container {
+      width: 100%; max-width: 480px; background: #0d1726; border: 1px solid #1c2b3d; 
+      border-radius: 8px; padding: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); 
+      box-sizing: border-box; display: none;
+    }
+    .stats-container h3 { margin-top: 0; color: #3ca9ff; font-size: 15px; border-bottom: 1px solid #1c2b3d; padding-bottom: 8px; font-weight: 700; text-align: center; }
+    
+    /* بطاقات الأعداد الكبيرة في الأعلى */
+    .stats-cards-container {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+    .stats-card {
+      flex: 1;
+      background: #0b1220;
+      border: 1px solid #1c2b3d;
+      border-radius: 4px;
+      padding: 12px;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(60, 169, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .stats-card-num {
+      font-size: 24px;
+      font-weight: 700;
+      color: #3ca9ff;
+      text-shadow: 0 0 8px rgba(60, 169, 255, 0.3);
+    }
+    .stats-card-label {
+      font-size: 10px;
+      color: #a0b2c6;
+      margin-top: 4px;
+      font-weight: bold;
+    }
+
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 400px) { .stats-grid { grid-template-columns: 1fr; } }
+    .stats-section { background: #0b1220; border: 1px solid #20334c; border-radius: 4px; padding: 10px; }
+    .stats-section h4 { margin: 0 0 8px 0; color: #e2e8f0; font-size: 12px; border-bottom: 1px dashed #1c2b3d; padding-bottom: 4px; }
+    .stats-section ul { list-style: none; padding: 0; margin: 0; font-size: 11px; max-height: 120px; overflow-y: auto; }
+    .stats-section li { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #0d1726; color: #cbd5e1; }
+    .stats-section li span.count { color: #3ca9ff; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <!-- حاوية التبويبات العلوية -->
+  <div class="container" style="padding: 0; background: transparent; border: none; box-shadow: none; margin-bottom: 10px;">
+    <div class="tabs-container">
+      <div id="tabExport" class="tab-button active" onclick="switchView('export')">📥 بوابة التصدير</div>
+      <div id="tabStats" class="tab-button" onclick="switchView('stats')">📊 الإحصائيات الحية</div>
+    </div>
+  </div>
+
+  <!-- الشاشة الأولى: التصدير والإدخال -->
+  <div id="exportView" class="container">
+    <h2>بوابة التصدير الذكية 📦</h2>
+    <div class="divider"><div class="dot"></div></div>
+    
+    <!-- قائمة المتجر المخصصة -->
+    <label>🏪 المتجر:</label>
+    <div class="custom-dropdown" id="dropdownStore">
+      <div class="dropdown-trigger" onclick="toggleDropdown('dropdownStore', event)">
+        <span class="selected-text">جميع المتاجر</span>
+        <span class="dropdown-arrow">▼</span>
+      </div>
+      <div class="dropdown-menu">
+        <div class="dropdown-item active" onclick="selectSingleItem('dropdownStore', 'الكل', 'جميع المتاجر')">جميع المتاجر</div>
+        <div class="dropdown-item" onclick="selectSingleItem('dropdownStore', 'توربو', 'توربو')">توربو</div>
+        <div class="dropdown-item" onclick="selectSingleItem('dropdownStore', 'زينب', 'زينب')">زينب</div>
+      </div>
+    </div>
+
+    <!-- قائمة حالة الطلب المخصصة للموقع -->
+    <label>📊 حالة الطلب (يمكنك اختيار أكثر من حالة):</label>
+    <div class="custom-dropdown" id="dropdownStatus">
+      <div class="dropdown-trigger" onclick="toggleDropdown('dropdownStatus', event)">
+        <span class="selected-text">قيد التجهيز</span>
+        <span class="dropdown-arrow">▼</span>
+      </div>
+      <div class="dropdown-menu">
+        <div class="dropdown-item active" onclick="toggleMultiItem(this, 'قيد التجهيز')">
+          <span class="checkbox-box">✓</span>
+          <span>قيد التجهيز</span>
+        </div>
+        <div class="dropdown-item" onclick="toggleMultiItem(this, 'مع المندوب')">
+          <span class="checkbox-box">✓</span>
+          <span>مع المندوب</span>
+        </div>
+        <div class="dropdown-item" onclick="toggleMultiItem(this, 'مستلم')">
+          <span class="checkbox-box">✓</span>
+          <span>مستلم</span>
+        </div>
+        <div class="dropdown-item" onclick="toggleMultiItem(this, 'راجع')">
+          <span class="checkbox-box">✓</span>
+          <span>راجع</span>
+        </div>
+        <div class="dropdown-item" onclick="toggleMultiItem(this, 'راجع مع المندوب')">
+          <span class="checkbox-box">✓</span>
+          <span>راجع مع المندوب</span>
+        </div>
+        <div class="dropdown-item" onclick="toggleMultiItem(this, 'الغاء')">
+          <span class="checkbox-box">✓</span>
+          <span>الغاء</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- فلاتر التواريخ وأزرار التحديد السريع -->
+    <div style="display: flex; gap: 10px;">
+      <div style="flex: 1;">
+        <label>📅 من تاريخ:</label>
+        <input type="date" id="startDate">
+      </div>
+      <div style="flex: 1;">
+        <label>📅 إلى تاريخ:</label>
+        <input type="date" id="endDate">
+      </div>
+    </div>
+    
+    <div class="quick-dates-container">
+      <div class="quick-date-btn" onclick="setQuickDate('today')">اليوم</div>
+      <div class="quick-date-btn" onclick="setQuickDate('yesterday')">أمس</div>
+      <div class="quick-date-btn" onclick="setQuickDate('week')">هذا الأسبوع</div>
+      <div class="quick-date-btn" onclick="setQuickDate('month')">هذا الشهر</div>
+    </div>
+
+    <!-- قائمة شركة التوصيل المخصصة -->
+    <label>🚚 نوع شركة التوصيل (شكل الملف):</label>
+    <div class="custom-dropdown" id="dropdownFormat">
+      <div class="dropdown-trigger" onclick="toggleDropdown('dropdownFormat', event)">
+        <span class="selected-text">الوسيط (ملف xlsx)</span>
+        <span class="dropdown-arrow">▼</span>
+      </div>
+      <div class="dropdown-menu">
+        <div class="dropdown-item active" onclick="selectSingleItem('dropdownFormat', 'الوسيط', 'الوسيط (ملف xlsx)')">الوسيط (ملف xlsx)</div>
+        <div class="dropdown-item" onclick="selectSingleItem('dropdownFormat', 'الناقل', 'الناقل (ملف xls)')">الناقل (ملف xls)</div>
+      </div>
+    </div>
+
+    <div class="checkbox-container">
+      <label>تحديث حالة الطلبات إلى "مع المندوب" بعد التحميل؟</label>
+      <input type="checkbox" id="updateStatusCheck" checked>
+    </div>
+
+    <button id="exportBtn" onclick="startExport()">📥 تصدير ملف جديد</button>
+    <div id="statusMsg"></div>
+  </div>
+
+  <!-- الشاشة الثانية: لوحة الإحصائيات المستقلة تماماً (ممنوع التمرير) -->
+  <div id="statsView" class="stats-container">
+    <h3>📊 تقرير إحصائيات الدفعة الحالية</h3>
+    <div class="divider"><div class="dot"></div></div>
+    
+    <div id="noStatsAlert" style="text-align: center; color: #a0b2c6; padding: 40px 10px; font-size: 14px;">
+      ℹ️ يرجى إجراء عملية تصدير أولاً لعرض تقرير الإحصائيات التفصيلي هنا.
+    </div>
+    
+    <div id="statsGrid" style="display: none; width: 100%;">
+      <!-- بطاقات الأعداد الكبيرة في الأعلى -->
+      <div class="stats-cards-container">
+        <div class="stats-card">
+          <span class="stats-card-num" id="totalOrdersCount">0</span>
+          <span class="stats-card-label">عدد الطلبات المفلترة</span>
+        </div>
+        <div class="stats-card">
+          <span class="stats-card-num" id="totalPiecesCount">0</span>
+          <span class="stats-card-label">عدد القطع الإجمالي</span>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stats-section">
+          <h4>👕 الموديلات</h4>
+          <ul id="statsModels"></ul>
+        </div>
+        <div class="stats-section">
+          <h4>🎨 الألوان</h4>
+          <ul id="statsColors"></ul>
+        </div>
+        <div class="stats-section">
+          <h4>📏 القياسات</h4>
+          <ul id="statsSizes"></ul>
+        </div>
+        <div class="stats-section">
+          <h4>📍 المحافظات</h4>
+          <ul id="statsProvinces"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 🌟 تم دمج رابط الـ Web App الفعلي الخاص بملف الشيت مالتك هنا تلقائياً 🌟
+    const API_URL = "https://script.google.com/macros/s/AKfycbzi4jcOea0JsX4P2LOXdYtZa0HVG8WBTDNNAhWwo6XcJC6X6YzjF54llq6pb5I8VxHdYQ/exec";
+
+    window.addEventListener('DOMContentLoaded', (event) => {
+      setLocalTodayDates(); // تعيين تاريخ اليوم المحلي للعراق فوراّ
+      initPWAManifest();   // تهيئة الـ PWA بأمان لمنع الـ Crash
+    });
+
+    // دالة ذكية لإيجاد الأعمدة متجاوزة أي مسافات زائدة أو فروقات أحرف في السطر الأول
+    function getHeaderIndex(headers, targetName) {
+      const targetClean = targetName.replace(/\s+/g, "").toLowerCase();
+      for (let i = 0; i < headers.length; i++) {
+        const headerClean = String(headers[i]).replace(/\s+/g, "").toLowerCase();
+        if (headerClean === targetClean) {
+          return i;
+        }
+      }
+      return -1;
+    }
+
+    // كود ضبط تاريخ العراق بدقة
+    function setLocalTodayDates() {
+      try {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const todayStr = `${year}-${month}-${day}`;
+        document.getElementById('startDate').value = todayStr;
+        document.getElementById('endDate').value = todayStr;
+      } catch(e) {
+        console.error("Error setting local dates:", e);
+      }
+    }
+
+    // أزرار التحديد السريع للتاريخ (ضغطة زر واحدة للموبايل)
+    function setQuickDate(type) {
+      const now = new Date();
+      let start = new Date();
+      let end = new Date();
+      
+      if (type === 'today') {
+        // اليوم الحالي
+      } else if (type === 'yesterday') {
+        start.setDate(now.getDate() - 1);
+        end.setDate(now.getDate() - 1);
+      } else if (type === 'week') {
+        let day = now.getDay();
+        start.setDate(now.getDate() - day);
+      } else if (type === 'month') {
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+      }
+      
+      const format = (d) => {
+        let year = d.getFullYear();
+        let month = String(d.getMonth() + 1).padStart(2, '0');
+        let day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+      
+      document.getElementById('startDate').value = format(start);
+      document.getElementById('endDate').value = format(end);
+    }
+
+    // كود الـ PWA الاحتياطي الآمن
+    function initPWAManifest() {
+      try {
+        const manifestData = {
+          "name": "التصدير", "short_name": "التصدير", "display": "standalone",
+          "background_color": "#080c14", "theme_color": "#0d1726",
+          "icons": [{"src": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Batman_Logo_V2.svg/512px-Batman_Logo_V2.svg.png", "sizes": "512x512", "type": "image/png"}]
+        };
+        const blob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+        document.getElementById('manifest').setAttribute('href', URL.createObjectURL(blob));
+      } catch(e) {
+        console.warn("PWA skipped:", e);
+      }
+    }
+
+    // نظام التبويبات (التبديل الفوري بين الصفحات)
+    function switchView(viewName) {
+      const tabExport = document.getElementById('tabExport');
+      const tabStats = document.getElementById('tabStats');
+      const exportView = document.getElementById('exportView');
+      const statsView = document.getElementById('statsView');
+      
+      if (viewName === 'export') {
+        tabExport.classList.add('active');
+        tabStats.classList.remove('active');
+        exportView.style.display = 'block';
+        statsView.style.display = 'none';
+      } else {
+        tabExport.classList.remove('active');
+        tabStats.classList.add('active');
+        exportView.style.display = 'none';
+        statsView.style.display = 'block';
+      }
+    }
+
+    // محرك إدارة وتشغيل القوائم المنسدلة المخصصة بالكامل للموقع
+    let selectedStore = "الكل";
+    let selectedFormat = "الوسيط";
+    let selectedStatuses = ['قيد التجهيز']; 
+
+    function toggleDropdown(id, event) {
+      event.stopPropagation();
+      document.querySelectorAll('.custom-dropdown').forEach(el => {
+        if (el.id !== id) el.classList.remove('open');
+      });
+      document.getElementById(id).classList.toggle('open');
+    }
+
+    function selectSingleItem(dropdownId, value, displayText) {
+      const dropdown = document.getElementById(dropdownId);
+      dropdown.classList.remove('open');
+      
+      dropdown.querySelectorAll('.dropdown-item').forEach(item => {
+        if (item.innerText.includes(displayText)) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
+      });
+      
+      dropdown.querySelector('.selected-text').innerText = displayText;
+      
+      if (dropdownId === 'dropdownStore') selectedStore = value;
+      if (dropdownId === 'dropdownFormat') selectedFormat = value;
+    }
+
+    function toggleMultiItem(element, statusValue) {
+      const index = selectedStatuses.indexOf(statusValue);
+      if (index > -1) {
+        selectedStatuses.splice(index, 1);
+        element.classList.remove('active');
+      } else {
+        selectedStatuses.push(statusValue);
+        element.classList.add('active');
+      }
+      updateDropdownText();
+    }
+
+    function updateDropdownText() {
+      const textEl = document.getElementById('dropdownStatus').querySelector('.selected-text');
+      if (selectedStatuses.length === 0 || selectedStatuses.length === 6) {
+        textEl.innerText = "الكل";
+      } else {
+        textEl.innerText = selectedStatuses.join('، ');
+      }
+    }
+
+    document.addEventListener('click', function(e) {
+      document.querySelectorAll('.custom-dropdown').forEach(el => {
+        el.classList.remove('open');
+      });
+    });
+
+    // الاتصال المباشر بجوجل شيت وتجاوز الـ CORS
+    function startExport() {
+      const btn = document.getElementById('exportBtn');
+      const msg = document.getElementById('statusMsg');
+      
+      document.getElementById('noStatsAlert').style.display = "block";
+      document.getElementById('statsGrid').style.display = "none";
+      
+      const filters = {
+        store: selectedStore,
+        statuses: selectedStatuses.length === 0 ? ["الكل"] : selectedStatuses, 
+        startDate: document.getElementById('startDate').value,
+        endDate: document.getElementById('endDate').value
+      };
+
+      btn.disabled = true;
+      btn.innerText = "⏳ جارٍ الاتصال بالسيرفر...";
+      msg.innerHTML = "";
+
+      // إرسال طلب POST سحابي ومباشر وتلقي البيانات بصيغة JSON
+      fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "fetchOrders",
+          filters: filters
+        })
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.success) {
+          processData(res.data);
+        } else {
+          throw new Error(res.error || "خطأ مجهول بالسيرفر");
+        }
+      })
+      .catch(error => {
+         btn.disabled = false;
+         btn.innerText = "📥 تصدير ملف جديد";
+         msg.innerHTML = "<div class='error-list'>❌ خطأ في السيرفر: " + error.message + "</div>";
+      });
+    }
+
+    function processData(payload) {
+      const btn = document.getElementById('exportBtn');
+      const msg = document.getElementById('statusMsg');
+      const shouldUpdate = document.getElementById('updateStatusCheck').checked;
+
+      const headers = payload.headers;
+      const data = payload.rows;
+      const piecesMap = payload.piecesMap || {};
+
+      if(data.length === 0) {
+        btn.disabled = false;
+        btn.innerText = "📥 تصدير ملف جديد";
+        msg.innerHTML = "<div class='error-list'>⚠️ لا توجد طلبات تطابق هذه الفلاتر!</div>";
+        return;
+      }
+
+      // فحص جودة البيانات (Validation)
+      const phoneRegex = /^07[0-9]{9}$/;
+      let validationErrors = [];
+      
+      const orderIdIdx = getHeaderIndex(headers, "اسم الزبون");
+      const phoneIdx = getHeaderIndex(headers, "رقم الهاتف الاساسي");
+      const priceIdx = getHeaderIndex(headers, "السعر مع التوصيل");
+
+      data.forEach(row => {
+        let orderId = row[orderIdIdx] || "غير معروف";
+        let phone = String(row[phoneIdx] || "").trim();
+        let price = parseInt(row[priceIdx]) || 0;
+
+        if(!phone.match(phoneRegex)) {
+          validationErrors.push(`الطلب <b>${orderId}</b>: رقم هاتف غير صالح (${phone})`);
+        }
+        if(price < 5000) {
+          validationErrors.push(`الطلب <b>${orderId}</b>: السعر أقل من 5000 (${price})`);
+        }
+      });
+
+      if(validationErrors.length > 0) {
+        let errorHtml = "<div class='error-list'>⚠️ <b>فشل التصدير! يرجى تصحيح الأخطاء التالية في AppSheet:</b><ul>";
+        validationErrors.forEach(err => { errorHtml += `<li>${err}</li>`; });
+        errorHtml += "</ul></div>";
+        
+        msg.innerHTML = errorHtml;
+        btn.disabled = false;
+        btn.innerText = "📥 تصدير ملف جديد";
+        return;
+      }
+
+      msg.innerHTML = "<div class='success-box' style='color:#3ca9ff; font-weight:bold;'>✅ البيانات سليمة. جارٍ التحديث وحساب الإحصائيات...</div>";
+
+      // حساب وعرض الإحصائيات اللحظية وعرضها بالتبويب المستقل
+      calculateAndShowStats(data, headers, piecesMap);
+
+      if(shouldUpdate) {
+        const uniqueIdIdx = getHeaderIndex(headers, "رقم الطلب");
+        const uniqueIds = data.map(r => String(r[uniqueIdIdx]));
+        
+        msg.innerHTML = "🔄 جارٍ تحديث حالة الطلبات بالسيرفر...";
+        
+        fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            action: "updateStatus",
+            uniqueIds: uniqueIds
+          })
+        })
+        .then(res => res.json())
+        .then(res => {
+          if (res.success) {
+            finalizeAndDownload(data, selectedFormat, "تم تحديث " + res.count + " طلب إلى 'مع المندوب'");
+          } else {
+            throw new Error(res.error);
+          }
+        })
+        .catch(err => {
+           finalizeAndDownload(data, selectedFormat, "فشل تحديث الحالة: " + err.message);
+        });
+      } else {
+        finalizeAndDownload(data, selectedFormat, "لم يتم تحديث الحالة");
+      }
+    }
+
+    function calculateAndShowStats(data, headers, piecesMap) {
+      const statsModels = document.getElementById('statsModels');
+      const statsColors = document.getElementById('statsColors');
+      const statsSizes = document.getElementById('statsSizes');
+      const statsProvinces = document.getElementById('statsProvinces');
+      const totalOrdersCountEl = document.getElementById('totalOrdersCount');
+      const totalPiecesCountEl = document.getElementById('totalPiecesCount');
+      
+      statsModels.innerHTML = "";
+      statsColors.innerHTML = "";
+      statsSizes.innerHTML = "";
+      statsProvinces.innerHTML = "";
+      
+      let modelsCount = {};
+      let colorsCount = {};
+      let sizesCount = {};
+      let provincesCount = {};
+      let totalPieces = 0;
+      
+      const uniqueIdIdx = getHeaderIndex(headers, "رقم الطلب"); 
+      const provinceIdx = getHeaderIndex(headers, "المحافظة"); 
+      const piecesCountIdx = getHeaderIndex(headers, "عدد القطع"); 
+      
+      data.forEach(row => {
+        let pCountVal = parseInt(row[piecesCountIdx]) || 0;
+        totalPieces += pCountVal;
+
+        let prov = String(row[provinceIdx] || "غير محدد").trim();
+        provincesCount[prov] = (provincesCount[prov] || 0) + 1;
+        
+        let orderUniqueId = String(row[uniqueIdIdx]).trim().toLowerCase(); // تحويل معرّف الطلب إلى حروف صغيرة للربط التام
+        let pieces = piecesMap[orderUniqueId] || [];
+        pieces.forEach(p => {
+          if (p.model) modelsCount[p.model] = (modelsCount[p.model] || 0) + 1;
+          if (p.color) colorsCount[p.color] = (colorsCount[p.color] || 0) + 1;
+          if (p.size) sizesCount[p.size] = (sizesCount[p.size] || 0) + 1;
+        });
+      });
+
+      totalOrdersCountEl.innerText = data.length;
+      totalPiecesCountEl.innerText = totalPieces;
+      
+      function populateList(element, countMap) {
+        let sorted = Object.entries(countMap).sort((a,b) => b[1] - a[1]);
+        if (sorted.length === 0) {
+          element.innerHTML = "<li style='color:#777; text-align:center; padding:5px 0;'>لا توجد تفاصيل</li>";
+          return;
+        }
+        sorted.forEach(([key, val]) => {
+          element.innerHTML += `<li><span>${key}</span><span class="count">${val}</span></li>`;
+        });
+      }
+      
+      populateList(statsModels, modelsCount);
+      populateList(statsColors, colorsCount);
+      populateList(statsSizes, sizesCount);
+      populateList(statsProvinces, provincesCount);
+      
+      document.getElementById('noStatsAlert').style.display = "none";
+      document.getElementById('statsGrid').style.display = "block";
+    }
+
+    function finalizeAndDownload(data, company, updateNote) {
+      const btn = document.getElementById('exportBtn');
+      const msg = document.getElementById('statusMsg');
+      
+      try {
+        let headers = [];
+        let processedData = [];
+        let extension = company === "الناقل" ? "xls" : "xlsx";
+        let filename = "طلبات_" + company + "_" + document.getElementById('startDate').value + "." + extension;
+
+        if(company === "الناقل") {
+          headers = ['ملاحظات', 'عدد القطع', 'يحتوي على ارجاع بضاعة؟', 'هاتف المستلم', 'تفاصيل العنوان', 'شفرة المحافظة', 'أسم المستلم', 'المبلغ عراقي', 'رقم الوصل'];
+          processedData = data.map(r => [ r[10]||'', r[7]||'', 'لا', String(r[1]||'').trim(), [r[4], r[5]].filter(Boolean).join(' - '), r[3]||'', r[0]||'', r[8]||'', '' ]);
+        } else {
+          headers = ['اسم الزبون', 'رقم الهاتف الاساسي', 'رقم الهاتف الثانوي', 'المحافظة', 'المنطقة', 'اقرب نقطة دالة', 'نوع البضاعه', 'عدد القطع', 'السعر مع التوصيل', 'حجم الطلب', 'الملاحظات', 'نوع الطلب'];
+          processedData = data.map(r => [ r[0]||'', String(r[1]||'').trim(), String(r[2]||'').trim(), r[3]||'', r[4]||'', r[5]||'', 'ملابس', r[7]||'', r[8]||'', 'عادي', r[10]||'', r[11]||'' ]);
+        }
+
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...processedData]);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "الطلبات");
+        
+        const wbout = XLSX.write(wb, { bookType: extension, type: 'base64' });
+        const mimeType = extension === "xls" ? 'application/vnd.ms-excel' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        const dataUri = "data:" + mimeType + ";base64," + wbout;
+
+        msg.innerHTML = `
+          <div class="success-box">
+            <span>🎉 تمت العملية بنجاح!</span><br>
+            <span style="color:#a0b2c6; font-size:12px;">(${updateNote})</span>
+          </div>
+          <a href="${dataUri}" download="${filename}" class="download-btn">📥 حفظ ملف الـ ${company}</a>
+        `;
+        
+      } catch (error) {
+        msg.innerHTML = "<div class='error-list'>❌ خطأ في بناء الإكسل: " + error.message + "</div>";
+      }
+
+      btn.disabled = false;
+      btn.innerText = "📥 تصدير ملف جديد";
+    }
+  </script>
+</body>
+</html>
