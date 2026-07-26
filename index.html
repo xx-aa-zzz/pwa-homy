@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="بوابة التصدير">
   <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Batman_Logo_V2.svg/512px-Batman_Logo_V2.svg.png">
-  <link id="manifest" rel="manifest">
+  <link rel="manifest" href="manifest.json">
 
   <!-- استدعاء المكتبات والخطوط السريعة -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
@@ -87,7 +87,7 @@
     h2 { text-align: center; color: #3ca9ff; margin-top: 0; font-size: 20px; font-weight: 700; }
     
     .divider { position: relative; height: 1px; background-color: #1c2b3d; margin: 20px 0; }
-    .divider .dot { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; background-color: #3ca9ff; border-radius: 50%; box-shadow: 0 0 10px #3ca9ff; }
+    .divider .dot { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; background-color: #3ca9ff; border-radius: 50%; box-shadow: 0 0 10px #3ca9ff;[...]
     
     label { display: flex; align-items: center; gap: 8px; margin-top: 15px; font-size: 13px; color: #a0b2c6; font-weight: bold; }
     
@@ -215,7 +215,7 @@
     }
     
     /* خيار الحفظ التلقائي للحالة */
-    .checkbox-container { display: flex; align-items: center; justify-content: space-between; margin-top: 20px; background: #0b1220; padding: 12px 15px; border-radius: 4px; border: 1px solid #20334c; box-sizing: border-box; }
+    .checkbox-container { display: flex; align-items: center; justify-content: space-between; margin-top: 20px; background: #0b1220; padding: 12px 15px; border-radius: 4px; border: 1px solid #203[...]
     .checkbox-container label { margin: 0; color: #a0b2c6; font-size: 12px; }
     .checkbox-container input { margin: 0; width: 22px; height: 22px; accent-color: #3ca9ff; cursor: pointer; }
     
@@ -460,7 +460,7 @@
 
     window.addEventListener('DOMContentLoaded', (event) => {
       setLocalTodayDates(); // تعيين تاريخ اليوم المحلي للعراق فوراّ
-      initPWAManifest();   // تهيئة الـ PWA بأمان لمنع الـ Crash
+      // PWA manifest is provided via manifest.json; Service Worker registration handled below
     });
 
     // دالة ذكية لإيجاد الأعمدة متجاوزة أي مسافات زائدة أو فروقات أحرف في السطر الأول
@@ -519,19 +519,13 @@
       document.getElementById('endDate').value = format(end);
     }
 
-    // كود الـ PWA الاحتياطي الآمن
-    function initPWAManifest() {
-      try {
-        const manifestData = {
-          "name": "التصدير", "short_name": "التصدير", "display": "standalone",
-          "background_color": "#080c14", "theme_color": "#0d1726",
-          "icons": [{"src": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Batman_Logo_V2.svg/512px-Batman_Logo_V2.svg.png", "sizes": "512x512", "type": "image/png"}]
-        };
-        const blob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
-        document.getElementById('manifest').setAttribute('href', URL.createObjectURL(blob));
-      } catch(e) {
-        console.warn("PWA skipped:", e);
-      }
+    // Register Service Worker for offline capabilities and install prompt
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('SW Registered'))
+          .catch(err => console.error('SW Registration Failed', err));
+      });
     }
 
     // نظام التبويبات (التبديل الفوري بين الصفحات)
@@ -809,11 +803,11 @@
         let filename = "طلبات_" + company + "_" + document.getElementById('startDate').value + "." + extension;
 
         if(company === "الناقل") {
-          headers = ['ملاحظات', 'عدد القطع', 'يحتوي على ارجاع بضاعة؟', 'هاتف المستلم', 'تفاصيل العنوان', 'شفرة المحافظة', 'أسم المستلم', 'المبلغ عراقي', 'رقم الوصل'];
+          headers = ['ملاحظات', 'عدد القطع', 'يحتوي على ارجاع بضاعة؟', 'هاتف المستلم', 'تفاصيل العنوان', 'شفرة المحافظة', 'أ[...]
           processedData = data.map(r => [ r[10]||'', r[7]||'', 'لا', String(r[1]||'').trim(), [r[4], r[5]].filter(Boolean).join(' - '), r[3]||'', r[0]||'', r[8]||'', '' ]);
         } else {
-          headers = ['اسم الزبون', 'رقم الهاتف الاساسي', 'رقم الهاتف الثانوي', 'المحافظة', 'المنطقة', 'اقرب نقطة دالة', 'نوع البضاعه', 'عدد القطع', 'السعر مع التوصيل', 'حجم الطلب', 'الملاحظات', 'نوع الطلب'];
-          processedData = data.map(r => [ r[0]||'', String(r[1]||'').trim(), String(r[2]||'').trim(), r[3]||'', r[4]||'', r[5]||'', 'ملابس', r[7]||'', r[8]||'', 'عادي', r[10]||'', r[11]||'' ]);
+          headers = ['اسم الزبون', 'رقم الهاتف الاساسي', 'رقم الهاتف الثانوي', 'المحافظة', 'المنطقة', 'اقرب نقطة دالة', 'نوع[...]
+          processedData = data.map(r => [ r[0]||'', String(r[1]||'').trim(), String(r[2]||'').trim(), r[3]||'', r[4]||'', r[5]||'', 'ملابس', r[7]||'', r[8]||'', 'عادي', r[10]||'', r[11]|[...]
         }
 
         const ws = XLSX.utils.aoa_to_sheet([headers, ...processedData]);
